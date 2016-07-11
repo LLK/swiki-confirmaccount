@@ -106,10 +106,10 @@ class AccountRequestSubmission {
 		for ($i = 0; $i <= 2; $i++) { //have a "fault-tolerance" of two, so if the code was generated and the time changed between entering the code and checking it, it still works
 			$codes[] = sha1((floor(time() / 1800) - $i) . $_SERVER['HTTP_USER_AGENT'] . $_SERVER['REMOTE_ADDR']);
 		}
-		$data = file_get_contents('http://scratch.mit.edu/site-api/comments/project/' . $matches[1] . '/?page=1&salt=' . md5(time())); //add the salt so it doesn't cache
+		$data = file_get_contents('https://scratch.mit.edu/site-api/comments/project/' . $matches[1] . '/?page=1&salt=' . md5(time())); //add the salt so it doesn't cache
 	    if (!$data) {
+       error_log(__FILE__ . ':' . __LINE__ . ': unexpected response from: https://scratch.mit.edu/site-api/comments/project/' . $matches[1] . '/?page=1&salt=' . md5(time()) . ' data: ' . $data );
 		   return array('api_failed', $context->msg('requestaccount-api-failed'));
-		   return;
 	    }
 	    $success = false;
 	    preg_match_all('%<div id="comments-\d+" class="comment +" data-comment-id="\d+">.*?<div class="actions-wrap">.*?<div class="name">\s+<a href="/users/(([a-zA-Z0-9]|-|_)+)">(([a-zA-Z0-9]|-|_|\*)+)</a>\s+</div>\s+<div class="content">(.*?)</div>%ms', $data, $matches);
@@ -134,6 +134,7 @@ class AccountRequestSubmission {
 		}
 	    
 	    if (!$success) {
+        error_log(__FILE__ . ':' . __LINE__ . ': unable to find comment with ' . $matches[5] . 'on: https://scratch.mit.edu/site-api/comments/project/' . $matches[1] . '/?page=1&salt=' . md5(time()) );
 		    return array('no_comment', $context->msg('requestaccount-nocomment-error'));
 	    }
 		
